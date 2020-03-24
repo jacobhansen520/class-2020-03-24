@@ -98,10 +98,39 @@ virtual_train_sample %>%
 
 **Prompt:**  Calculate  the difference between the income of treated and control commuters in our sample. We need to subtract the Control average from the Treated average. To do that, having them on the same row is convenient. Recall the `pivot_*` functions. `everything()` is also a cool trick for organizing the order of the variables in a tibble. I like to put the key variable, which would be the income difference in this case, first.
 
+```{r}
+train %>% 
+  group_by(treatment) %>% 
+  summarize(avg_inc = mean(income)) %>% 
+  pivot_wider(names_from = treatment, values_from = avg_inc) %>% 
+  mutate(difference = Treated - Control)
+
+```
+
 # Scene 7
 
 **Prompt:**  Calculate a 95% confidence interval for the difference between the mean income of treated and control commuters in our sample. Provide a Bayesian and Frequentist interpretation of this interval.
 
+```{r}
+set.seed(7)
+
+virtual_train_sample <- train %>% 
+  rep_sample_n(size = 115, replace = TRUE, reps = 1000) %>% 
+  group_by(treatment, replicate) %>%
+  summarize(avg_inc = mean(income)) %>% 
+  pivot_wider(names_from = treatment, values_from = avg_inc) %>% 
+  mutate(difference = Treated - Control)
+
+virtual_train_sample %>%
+  pull(difference) %>% 
+  quantile(c(0.025, 0.975))
+
+# Frequentist: Of the 1000 times we ran this experiment, we are 95% confident
+# that any individual instance falls within this range.
+
+# Bayesian: We are 95% confident that the true mean of the Boston population
+# would fall within this range.
+```
 
 # Scene 8
 

@@ -445,10 +445,38 @@ virtual_train_sample %&gt;%
 <div id="scene-5" class="section level1">
 <h1>Scene 5</h1>
 <p><strong>Prompt:</strong> Calculate the difference between the income of treated and control commuters in our sample. We need to subtract the Control average from the Treated average. To do that, having them on the same row is convenient. Recall the <code>pivot_*</code> functions. <code>everything()</code> is also a cool trick for organizing the order of the variables in a tibble. I like to put the key variable, which would be the income difference in this case, first.</p>
+<pre class="r"><code>train %&gt;% 
+  group_by(treatment) %&gt;% 
+  summarize(avg_inc = mean(income)) %&gt;% 
+  pivot_wider(names_from = treatment, values_from = avg_inc) %&gt;% 
+  mutate(difference = Treated - Control)</code></pre>
+<pre><code>## # A tibble: 1 x 3
+##   Treated Control difference
+##     &lt;dbl&gt;   &lt;dbl&gt;      &lt;dbl&gt;
+## 1 132892. 148922.    -16030.</code></pre>
 </div>
 <div id="scene-7" class="section level1">
 <h1>Scene 7</h1>
 <p><strong>Prompt:</strong> Calculate a 95% confidence interval for the difference between the mean income of treated and control commuters in our sample. Provide a Bayesian and Frequentist interpretation of this interval.</p>
+<pre class="r"><code>set.seed(7)
+
+virtual_train_sample &lt;- train %&gt;% 
+  rep_sample_n(size = 115, replace = TRUE, reps = 1000) %&gt;% 
+  group_by(treatment, replicate) %&gt;%
+  summarize(avg_inc = mean(income)) %&gt;% 
+  pivot_wider(names_from = treatment, values_from = avg_inc) %&gt;% 
+  mutate(difference = Treated - Control)
+
+virtual_train_sample %&gt;%
+  pull(difference) %&gt;% 
+  quantile(c(0.025, 0.975))</code></pre>
+<pre><code>##       2.5%      97.5% 
+## -42139.091   9991.183</code></pre>
+<pre class="r"><code># Frequentist: Of the 1000 times we ran this experiment, we are 95% confident
+# that any individual instance falls within this range.
+
+# Bayesian: We are 95% confident that the true mean of the Boston population
+# would fall within this range.</code></pre>
 </div>
 <div id="scene-8" class="section level1">
 <h1>Scene 8</h1>
